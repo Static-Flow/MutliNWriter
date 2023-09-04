@@ -1,4 +1,4 @@
-package MultiNWriter
+package MutliNWriter
 
 import (
 	"bufio"
@@ -99,7 +99,7 @@ func TestFailedWrite(t *testing.T) {
 	if len(writeErrors) != 1 {
 		t.Errorf("Only writer foo should have an error")
 	} else {
-		t.Logf("Only 1 writer failed with error %s with %d bytes writen", writeErrors[0].(writeError).Error(), writeErrors[0].(writeError).BytesWritten())
+		t.Logf("Only 1 writer failed with error %s with %d bytes writen", writeErrors[0].(WriteError).Error(), writeErrors[0].(WriteError).BytesWritten())
 	}
 	if string(buf2) != "test2" {
 		t.Errorf("MultiNWriter did not successfully write to bar twice, wanted `test2`, got %s", buf2)
@@ -163,7 +163,7 @@ func TestFailedShouldWrite(t *testing.T) {
 	doneWriting = true
 	if err == nil {
 		t.Errorf("Writer 2 should have failed")
-	} else if err.(writeError).WriterKey() != 2 {
+	} else if err.(WriteError).WriterKey() != 2 {
 		t.Errorf("Only writer 2 should have failed")
 	}
 	waitGroup.Wait()
