@@ -1,7 +1,7 @@
 package main
 
 import (
-	"MutliNWriter"
+	"Static-Flow/MutliNWriter"
 	"bufio"
 	"fmt"
 	"github.com/gofiber/contrib/websocket"
