@@ -1,4 +1,4 @@
-module Static-Flow/MutliNWriter
+module github.com/Static-Flow/MutliNWriter
 
 go 1.20
 
