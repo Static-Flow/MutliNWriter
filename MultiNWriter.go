@@ -45,6 +45,16 @@ func NewMultiNWriter() *MultiNWriter {
 	}
 }
 
+func (mnw *MultiNWriter) GetWriterKeys() []any {
+	mnw.mutex.Lock()
+	keys := make([]any, 0, len(mnw.writers))
+	for key := range mnw.writers {
+		keys = append(keys, key)
+	}
+	mnw.mutex.Unlock()
+	return keys
+}
+
 func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys ...any) error {
 	mnw.mutex.Lock()
 	var writeErrors []error
