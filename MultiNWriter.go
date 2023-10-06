@@ -48,7 +48,7 @@ func NewMultiNWriter() *MultiNWriter {
 func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys ...any) error {
 	mnw.mutex.Lock()
 	var writeErrors []error
-	for writerKey := range keys {
+	for _, writerKey := range keys {
 		n, writeErr := mnw.writers[writerKey].Write(input)
 		if writeErr != nil {
 			writeErrors = append(writeErrors, WriteError{
