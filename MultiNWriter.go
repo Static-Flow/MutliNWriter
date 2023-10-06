@@ -45,6 +45,23 @@ func NewMultiNWriter() *MultiNWriter {
 	}
 }
 
+func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys ...any) error {
+	mnw.mutex.Lock()
+	var writeErrors []error
+	for writerKey := range keys {
+		n, writeErr := mnw.writers[writerKey].Write(input)
+		if writeErr != nil {
+			writeErrors = append(writeErrors, WriteError{
+				n:   n,
+				key: writerKey,
+				err: writeErr,
+			})
+		}
+	}
+	mnw.mutex.Unlock()
+	return errors.Join(writeErrors...)
+}
+
 /*
 *
 Write writes the provided bytes to all children io.Writer's. Any errors during the writes are collected and
@@ -52,6 +69,7 @@ returned using errors.Join. The individual `WriteError` errors can be inspected 
 like so: ```err.(interface{ Unwrap() []error }).Unwrap()```.
 */
 func (mnw *MultiNWriter) Write(input []byte) error {
+	mnw.mutex.Lock()
 	var writeErrors []error
 	for writerKey, writer := range mnw.writers {
 		n, writeErr := writer.Write(input)
@@ -63,6 +81,7 @@ func (mnw *MultiNWriter) Write(input []byte) error {
 			})
 		}
 	}
+	mnw.mutex.Unlock()
 	return errors.Join(writeErrors...)
 }
 
@@ -74,6 +93,8 @@ Note: Due to the random access of maps, there exists an edge case where if the l
 the "return early" is also the end of the function and thus behaves exactly like Write.
 */
 func (mnw *MultiNWriter) ShouldWrite(input []byte) error {
+	mnw.mutex.Lock()
+	defer mnw.mutex.Unlock()
 	for writerKey, writer := range mnw.writers {
 		if bytesWritten, err := writer.Write(input); err != nil {
 			return WriteError{
