@@ -57,7 +57,7 @@ func (mnw *MultiNWriter) GetWriterKeys() []any {
 }
 
 // WriteToSpecificKeys sends input bytes to only the specified writer keys
-func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys ...any) error {
+func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys []any) error {
 	mnw.mutex.Lock()
 	var writeErrors []error
 	for _, writerKey := range keys {

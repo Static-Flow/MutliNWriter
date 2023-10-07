@@ -262,7 +262,7 @@ func TestMultiNWriter_WriteToSpecificKeys(t *testing.T) {
 	multiNWriter.AddWriter("bar", barBuilder)
 	multiNWriter.AddWriter("baz", bazBuilder)
 	specificKeys := []interface{}{"foo", "bar"}
-	if err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys...); err != nil {
+	if err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys); err != nil {
 		t.Fatal(err)
 	}
 	if fooBuilder.String() != "testest" && barBuilder.String() != "testest" && bazBuilder.String() != "" {
@@ -280,8 +280,8 @@ func TestMultiNWriter_WriteToSpecificKeysWithFail(t *testing.T) {
 	multiNWriter.AddWriter("bar", barWriter)
 	multiNWriter.AddWriter("baz", bazBuilder)
 	specificKeys := []interface{}{"foo", "bar"}
-	err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys...)
-	assert.Equal(t, err, "io: read/write on closed pipe")
+	err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys)
+	assert.Equal(t, "io: read/write on closed pipe", err.Error())
 	if fooBuilder.String() != "testest" && err != nil && bazBuilder.String() != "" {
 		t.Errorf("Expected foo:testest, bar:error, baz:``. Got: foo:%s, bar:%s, baz:%s", fooBuilder, err, bazBuilder)
 	}
