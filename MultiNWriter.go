@@ -45,6 +45,7 @@ func NewMultiNWriter() *MultiNWriter {
 	}
 }
 
+// GetWriterKeys returns the keys for all current writers
 func (mnw *MultiNWriter) GetWriterKeys() []any {
 	mnw.mutex.Lock()
 	keys := make([]any, 0, len(mnw.writers))
@@ -55,6 +56,7 @@ func (mnw *MultiNWriter) GetWriterKeys() []any {
 	return keys
 }
 
+// WriteToSpecificKeys sends input bytes to only the specified writer keys
 func (mnw *MultiNWriter) WriteToSpecificKeys(input []byte, keys ...any) error {
 	mnw.mutex.Lock()
 	var writeErrors []error

@@ -3,6 +3,7 @@ package MutliNWriter
 import (
 	"bufio"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"strings"
 	"sync"
@@ -63,7 +64,7 @@ func TestFailedWrite(t *testing.T) {
 		for {
 			n, _ := bufferedReader.Read(buf)
 			if n > 0 {
-				fmt.Println("reader ", string(buf[:n]))
+				t.Log("reader ", string(buf[:n]))
 			}
 		}
 	}()
@@ -73,7 +74,7 @@ func TestFailedWrite(t *testing.T) {
 		for {
 			n, _ := bufferedReader.Read(buf2)
 			if n > 0 {
-				fmt.Println("reader2 ", string(buf2[:n]))
+				t.Log("reader2 ", string(buf2[:n]))
 			}
 		}
 	}()
@@ -171,10 +172,10 @@ func TestFailedShouldWrite(t *testing.T) {
 	resultCount := 0
 	for result := range resultsChannel {
 		resultCount++
-		fmt.Println(result)
+		t.Log(result)
 	}
-	if resultCount == 9 {
-		t.Error("Expected less than 9 reads")
+	if resultCount == 10 {
+		t.Error("Expected less than 10 reads")
 	}
 	t.Logf("Only got %d reads", resultCount)
 }
@@ -236,9 +237,52 @@ func TestSuccessfulShouldWrite(t *testing.T) {
 	resultCount := 0
 	for result := range resultsChannel {
 		resultCount++
-		fmt.Println(result)
+		t.Log(result)
 	}
 	if resultCount != 10 {
 		t.Errorf("Expected 10 reads, got %d", resultCount)
+	}
+}
+
+func TestMultiNWriter_GetWriterKeys(t *testing.T) {
+	multiNWriter := NewMultiNWriter()
+	multiNWriter.AddWriter("foo", &strings.Builder{})
+	multiNWriter.AddWriter("bar", &strings.Builder{})
+	multiNWriter.AddWriter("baz", &strings.Builder{})
+	keys := multiNWriter.GetWriterKeys()
+	assert.Equal(t, 3, len(keys))
+}
+
+func TestMultiNWriter_WriteToSpecificKeys(t *testing.T) {
+	multiNWriter := NewMultiNWriter()
+	fooBuilder := &strings.Builder{}
+	barBuilder := &strings.Builder{}
+	bazBuilder := &strings.Builder{}
+	multiNWriter.AddWriter("foo", fooBuilder)
+	multiNWriter.AddWriter("bar", barBuilder)
+	multiNWriter.AddWriter("baz", bazBuilder)
+	specificKeys := []interface{}{"foo", "bar"}
+	if err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys...); err != nil {
+		t.Fatal(err)
+	}
+	if fooBuilder.String() != "testest" && barBuilder.String() != "testest" && bazBuilder.String() != "" {
+		t.Errorf("Expected foo:testest, bar:testest, baz:``. Got: foo:%s, bar:%s, baz:%s", fooBuilder, barBuilder, bazBuilder)
+	}
+}
+
+func TestMultiNWriter_WriteToSpecificKeysWithFail(t *testing.T) {
+	multiNWriter := NewMultiNWriter()
+	fooBuilder := &strings.Builder{}
+	_, barWriter := io.Pipe()
+	_ = barWriter.Close()
+	bazBuilder := &strings.Builder{}
+	multiNWriter.AddWriter("foo", fooBuilder)
+	multiNWriter.AddWriter("bar", barWriter)
+	multiNWriter.AddWriter("baz", bazBuilder)
+	specificKeys := []interface{}{"foo", "bar"}
+	err := multiNWriter.WriteToSpecificKeys([]byte("testest"), specificKeys...)
+	assert.Equal(t, err, "io: read/write on closed pipe")
+	if fooBuilder.String() != "testest" && err != nil && bazBuilder.String() != "" {
+		t.Errorf("Expected foo:testest, bar:error, baz:``. Got: foo:%s, bar:%s, baz:%s", fooBuilder, err, bazBuilder)
 	}
 }
